@@ -23,3 +23,4 @@ The highest number always dictates the truth.
 
 - A project rule (900) overrides a library rule (800).
 - A library rule (800) overrides a language rule (300).
+- A language rule (300) overrides a core rule (000).
