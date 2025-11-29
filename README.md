@@ -48,7 +48,7 @@ When requesting a new Gem configuration from the Architect, use this structured 
 This script is used **only** for capturing the source code of **stable, internal libraries** (files in the 800-band).
 
 * **Purpose:** To transform stable library code into a single `800-lib-*.md` file that is then included in the Brain Zip as permanent knowledge.
-* **Usage:** `python pack_context.py <path_to_library_root> <output_filename.md>`
+* **Usage:** `python pack-context.py <path_to_library_root> <output_filename.md>`
 * **Placement:** The resulting `800-lib-*.md` file must be placed in the `/brains` directory.
 
 ---
