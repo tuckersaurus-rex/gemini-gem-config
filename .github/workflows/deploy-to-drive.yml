@@ -1,4 +1,4 @@
-name: Deploy Instructions to Google Drive
+name: Deploy Simple Configuration Structure
 
 on:
   push:
@@ -12,196 +12,29 @@ jobs:
       - name: 📦 Checkout code
         uses: actions/checkout@v4
 
-      # 1. Install necessary dependencies and utilities
-      - name: Install Utilities & Python Dependencies
-        run: |
-          # Install general utilities
-          sudo apt-get update && sudo apt-get install -y jq zip
+      # 1. Upload system-kernel.md to the ROOT FOLDER
+      - name: ⬆️ Upload 1/3 - System Kernel File
+        uses: nextDriveIoE/google-drive-upload-action@v2
+        with:
+          credentials: ${{ secrets.GSA_CREDENTIALS }}
+          parent_folder_id: ${{ secrets.GEMINI_CONFIG_FOLDER_ID }}
+          target: system-kernel.md
+          overwrite: true
 
-          # Install Python dependencies for Google Drive API
-          pip install google-api-python-client google-auth-oauthlib google-auth-httplib2
+      # 2. Upload /brains content to the /brains SUBFOLDER
+      - name: ⬆️ Upload 2/3 - Brains Content
+        uses: nextDriveIoE/google-drive-upload-action@v2
+        with:
+          credentials: ${{ secrets.GSA_CREDENTIALS }}
+          parent_folder_id: ${{ secrets.GEMINI_CONFIG_FOLDER_ID }}
+          target: brains/
+          overwrite: true
 
-      # 2. Install YQ (YAML processor) for reading the build recipe
-      - name: 📝 Install YQ
-        run: sudo wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && sudo chmod +x /usr/bin/yq
-
-      # 3. Read the YAML manifest and convert it into a JSON array for easy looping
-      - name: 📄 Convert Manifest to JSON
-        id: manifest
-        run: |
-          # Explicitly include all required properties for the deployment script
-          yq '.[] | {"version": .version, "base_name": .filename, "file_list": .modules, "drive_folder": .drive_folder, "external_context": .external_context}' gem-zip-manifest.yaml | jq -s . > /tmp/manifest.json
-
-      # 4. Loop through the generated JSON array, create custom zips, and assemble
-      - name: 🗜️ Package Custom Brain Zips
-        run: |
-          MANIFEST_JSON="/tmp/manifest.json"
-          mkdir -p releases
-          rm -rf releases/*
-
-          jq -c '.[]' $MANIFEST_JSON | while read i; do
-
-            # PARSE DATA
-            VERSION=$(echo "$i" | jq -r '.version')
-            DRIVE_FOLDER_NAME=$(echo "$i" | jq -r '.drive_folder')
-            BASE_FILENAME_RAW=$(echo "$i" | jq -r '.base_name')
-            MODULE_ARRAY=$(echo "$i" | jq -r '.file_list | @tsv')
-            CONTEXT_ARRAY=$(echo "$i" | jq -r '.external_context | @tsv')
-
-            # Substitute version placeholder
-            ZIP_FILENAME=$(echo "$BASE_FILENAME_RAW" | sed "s/{{ version }}/$VERSION/")
-
-            echo "--- Building: $DRIVE_FOLDER_NAME"
-
-            # --- A) Create Artifact Destination (Subfolder in releases) ---
-            ARTIFACT_PATH="releases/$DRIVE_FOLDER_NAME"
-            mkdir -p "$ARTIFACT_PATH"
-
-            # --- B) Zip all items under -modules ---
-            FILES_TO_ZIP=""
-            for file in $MODULE_ARRAY; do
-              FILES_TO_ZIP+=" brains/$file"
-            done
-
-            # Execute the zip command and place the result in the artifact folder
-            zip -j "$ARTIFACT_PATH/$ZIP_FILENAME" $FILES_TO_ZIP
-            echo "✅ Created $ZIP_FILENAME"
-
-            # --- C) Copy all files listed under -external_context ---
-            if [[ -n "$CONTEXT_ARRAY" ]]; then
-              echo "Copying external context files..."
-              for file in $CONTEXT_ARRAY; do
-                # This copies the file from its source location (e.g., /context) to the final subfolder
-                cp "$file" "$ARTIFACT_PATH/"
-                echo "  - Copied $file"
-              done
-            fi
-
-          done
-
-      # 5. Create Python Deployment Script (This contains the core logic)
-      - name: 📝 Create Deployment Script
-        run: |
-          cat <<EOF > drive_deployer.py
-          import os
-          import json
-          import base64
-          from google.oauth2.credentials import Credentials
-          from googleapiclient.discovery import build
-          from googleapiclient.http import MediaFileUpload
-
-          # --- Configuration from Environment ---
-          GSA_B64_KEY = os.environ.get('GSA_CREDENTIALS')
-          PARENT_FOLDER_ID = os.environ.get('GEMINI_CONFIG_FOLDER_ID')
-          MANIFEST_JSON_PATH = "/tmp/manifest.json"
-
-          def authenticate_drive():
-              """Decodes credentials and returns an authenticated Drive service."""
-              if not GSA_B64_KEY:
-                  print("Error: GSA_CREDENTIALS secret not found.")
-                  sys.exit(1)
-
-              # Decode the Base64 JSON key
-              try:
-                  key_json_bytes = base64.b64decode(GSA_B64_KEY)
-                  service_account_info = json.loads(key_json_bytes.decode('utf-8'))
-              except Exception as e:
-                  print(f"Error decoding credentials: {e}")
-                  sys.exit(1)
-
-              # Build the credentials object using service account info
-              credentials = Credentials.from_service_account_info(
-                  service_account_info,
-                  scopes=['https://www.googleapis.com/auth/drive.file']
-              )
-
-              return build('drive', 'v3', credentials=credentials)
-
-          def find_or_create_folder(service, folder_name, parent_id):
-              """Finds a folder by name or creates it under the parent_id."""
-
-              # 1. Search for existing folder
-              query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and '{parent_id}' in parents and trashed=false"
-              results = service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
-              items = results.get('files', [])
-
-              if items:
-                  print(f"  -> Found existing folder ID: {items[0]['id']}")
-                  return items[0]['id']
-
-              # 2. Create folder if not found
-              file_metadata = {
-                  'name': folder_name,
-                  'mimeType': 'application/vnd.google-apps.folder',
-                  'parents': [parent_id]
-              }
-              folder = service.files().create(body=file_metadata, fields='id').execute()
-              print(f"  -> Created new folder ID: {folder['id']}")
-              return folder['id']
-
-          def upload_file(service, local_file_path, file_name, destination_folder_id):
-              """Uploads a file, searching for and overwriting existing files by name."""
-
-              # Search for existing file by name in the destination folder
-              query = f"name='{file_name}' and '{destination_folder_id}' in parents and trashed=false"
-              results = service.files().list(q=query, spaces='drive', fields='files(id)').execute()
-              existing_files = results.get('files', [])
-
-              file_metadata = {'name': file_name, 'parents': [destination_folder_id]}
-              media = MediaFileUpload(local_file_path, resumable=True)
-
-              if existing_files:
-                  # Update/overwrite existing file
-                  file_id = existing_files[0]['id']
-                  service.files().update(fileId=file_id, media_body=media, fields='id').execute()
-                  print(f"  ✅ Updated existing file: {file_name}")
-              else:
-                  # Insert new file
-                  service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-                  print(f"  ✅ Uploaded new file: {file_name}")
-
-          def main():
-              try:
-                  service = authenticate_drive()
-
-                  with open(MANIFEST_JSON_PATH, 'r') as f:
-                      manifest_array = json.load(f)
-
-                  for item in manifest_array:
-                      folder_name = item['drive_folder']
-
-                      # 1. Find or create the unique subfolder
-                      subfolder_id = find_or_create_folder(service, folder_name, PARENT_FOLDER_ID)
-
-                      # 2. Upload the ZIP artifact
-                      zip_filename = item['filename'].replace('{{ version }}', item['version'])
-                      local_zip_path = os.path.join("releases", folder_name, zip_filename)
-                      if os.path.exists(local_zip_path):
-                          upload_file(service, local_zip_path, zip_filename, subfolder_id)
-
-                      # 3. Upload all External Context files
-                      if item.get('external_context'):
-                          for file_path in item['external_context']:
-                              local_context_path = os.path.join("releases", folder_name, os.path.basename(file_path))
-                              if os.path.exists(local_context_path):
-                                  upload_file(service, local_context_path, os.path.basename(file_path), subfolder_id)
-
-                  # 4. Global Manifest Upload (always goes to the root ID)
-                  upload_file(service, "context/999-architect-library-manifest.md", "999-architect-library-manifest.md", PARENT_FOLDER_ID)
-
-              except Exception as e:
-                  print(f"Deployment Failed: {e}")
-                  sys.exit(1)
-
-          if __name__ == '__main__':
-              import sys
-              main()
-
-          EOF
-
-      # 6. Execute the Python Deployment Script
-      - name: 🚀 Execute Deployment to Drive
-        env:
-          GSA_CREDENTIALS: ${{ secrets.GSA_CREDENTIALS }}
-          GEMINI_CONFIG_FOLDER_ID: ${{ secrets.GEMINI_CONFIG_FOLDER_ID }}
-        run: python drive_deployer.py
+      # 3. Upload /context content to the /context SUBFOLDER
+      - name: ⬆️ Upload 3/3 - Context Content
+        uses: nextDriveIoE/google-drive-upload-action@v2
+        with:
+          credentials: ${{ secrets.GSA_CREDENTIALS }}
+          parent_folder_id: ${{ secrets.GEMINI_CONFIG_FOLDER_ID }}
+          target: context/
+          overwrite: true

@@ -10,14 +10,6 @@ venv/
 __pycache__/
 
 # -----------------------------------------------------
-# 2. GENERATED ARTIFACTS
-# -----------------------------------------------------
-# Ignore all zip files by default (unless specifically allowed below)
-*.zip
-# Ignore the generated context snapshot (obsolete file, but good for protection)
-998-context-*.md
-
-# -----------------------------------------------------
 # 3. EXPLICITLY ALLOWED FILES (NEGATION)
 # -----------------------------------------------------
 # We MUST track the .gitkeep files to version control empty directories

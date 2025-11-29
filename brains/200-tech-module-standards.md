@@ -21,6 +21,7 @@ All files must strictly follow: `[3-Digit-Number]-[category]-[name].md`
 
 - **Core (000):** How to parse files.
 - **Domain (100):** "Who you are."
+- **Standards (200):** Style in which you do it.
 - **Tech (300):** "How you do it."
 - **Libraries (800):** Stable code context.
 - **Project (900):** "What you are building right now."
