@@ -21,16 +21,16 @@ jobs:
         run: sudo wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && sudo chmod +x /usr/bin/yq
 
       # 3. Read the YAML manifest and convert it into a JSON array for easy looping
+      # FIX: Explicitly include the 'external_context' property in the extraction
       - name: 📄 Convert Manifest to JSON
         id: manifest
         run: |
-          yq '.[] | {"version": .version, "base_name": .filename, "file_list": .modules, "drive_folder": .drive_folder}' gem-zip-manifest.yaml | jq -s . > /tmp/manifest.json
+          yq '.[] | {"version": .version, "base_name": .filename, "file_list": .modules, "drive_folder": .drive_folder, "external_context": .external_context}' gem-manifest.yaml | jq -s . > /tmp/manifest.json
 
       # 4. Loop through the generated JSON array, create custom zips, and assemble
       - name: 🗜️ Package Custom Brain Zips & Context
         id: package_artifacts
         run: |
-          # The runner's current working directory is the repo root.
           MANIFEST_JSON="/tmp/manifest.json"
 
           # 1. Ensure the releases directory is clean and ready
@@ -41,9 +41,9 @@ jobs:
             # PARSE DATA
             VERSION=$(echo "$i" | jq -r '.version')
             DRIVE_FOLDER_NAME=$(echo "$i" | jq -r '.drive_folder')
-            BASE_FILENAME_RAW=$(echo "$i" | jq -r '.filename')
+            BASE_FILENAME_RAW=$(echo "$i" | jq -r '.base_name')
             MODULE_ARRAY=$(echo "$i" | jq -r '.file_list | @tsv')
-            CONTEXT_ARRAY=$(echo "$i" | jq -r '.external_context | @tsv')
+            CONTEXT_ARRAY=$(echo "$i" | jq -r '.external_context | @tsv') # Context array is now correctly extracted
 
             # Substitute version placeholder
             ZIP_FILENAME=$(echo "$BASE_FILENAME_RAW" | sed "s/{{ version }}/$VERSION/")
@@ -51,7 +51,6 @@ jobs:
             echo "--- Processing Gem: $DRIVE_FOLDER_NAME"
 
             # --- A) Create Artifact Destination (Subfolder in releases) ---
-            # This folder will hold all final files for this Gem.
             ARTIFACT_PATH="releases/$DRIVE_FOLDER_NAME"
             mkdir -p "$ARTIFACT_PATH"
             echo "Created destination folder: $ARTIFACT_PATH"
@@ -85,7 +84,6 @@ jobs:
           credentials: ${{ secrets.GSA_CREDENTIALS }}
           parent_folder_id: ${{ secrets.GEMINI_CONFIG_FOLDER_ID }}
           # Target: Pushes the entire content of the 'releases' folder, maintaining the subfolder structure.
-          # The context/manifest files must be pushed separately, as they are not inside releases.
           target: releases/
           overwrite: true
 

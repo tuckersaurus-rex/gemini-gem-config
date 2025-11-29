@@ -5,7 +5,7 @@
 This repository utilizes the **Two-Slot Architecture** to separate static instructions from dynamic project data.
 
 | Directory | Purpose | Protocol |
-| :--- | :--- | :--- | :--- |
+| :--- | :--- | :--- |
 | **`/brains`** | **Slot 1: The OS/Kernel.** Contains core logic, roles, standards, and permanent library code. | **Strict.** Files must be `000` to `899` (Century Protocol). |
 | **`/context`** | **Slot 2: The Data Index.** Contains the library inventory (`999` manifest). | **Strict.** Contains the data indexes and metadata. |
 | **`/releases`** | Archived Zip files of built Brains. | N/A |

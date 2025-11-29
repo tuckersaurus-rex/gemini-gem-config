@@ -14,7 +14,7 @@ IGNORE_DIRS = {
 # Files to ignore
 IGNORE_FILES = {
     'package-lock.json', '.DS_Store', 'README.md', 'changelog.md',
-    'license.txt', '.gitignore', '.gitkeep', 'pack_context.py' # Added self-reference
+    'license.txt', '.gitignore', '.gitkeep', 'pack-context.py' # Added self-reference
 }
 
 # Extensions to include (Add/Remove as needed)
@@ -27,10 +27,17 @@ def generate_markdown_snapshot(project_root, output_filename):
     output_path = os.path.join(os.getcwd(), output_filename)
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    if os.path.abspath(output_path) == os.path.abspath(project_root):
-        print("Error: Output file path matches project root. Aborting.")
+    # Ensure project_root is a directory
+    if not os.path.isdir(project_root):
+        print(f"Error: Project root '{project_root}' is not a directory. Aborting.")
         sys.exit(1)
 
+    # Ensure output file is inside the project root directory
+    abs_output_path = os.path.abspath(output_path)
+    abs_project_root = os.path.abspath(project_root)
+    if os.path.commonpath([abs_output_path, abs_project_root]) != abs_project_root:
+        print("Error: Output file must be inside the project root directory. Aborting.")
+        sys.exit(1)
     print(f"📦 Packing context from: {project_root}")
     print(f"➡️ Output file: {output_filename}")
 
