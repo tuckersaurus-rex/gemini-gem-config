@@ -1,45 +1,38 @@
 name: Deploy to Google Drive
 
 on:
+  # 1. Allows you to click a button to test (Manual Trigger)
+  workflow_dispatch:
+  # 2. Automatically runs when you push to main (Future proofing)
   push:
     branches:
-      - main # Trigger on pushes to main
+      - main
 
 jobs:
-  backup:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. Checkout your code
-      - name: Checkout code
+      # --- SETUP ---
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. (Optional) Build your project here if needed
-      # - name: Build Project
-      #   run: npm install && npm run build
-
-      # 3. Install Rclone
       - name: Install Rclone
         run: sudo -v ; curl https://rclone.org/install.sh | sudo bash
 
-      # 4. Authenticate and Copy
-      - name: Sync to Google Drive
+      # --- CONFIGURATION ---
+      - name: Setup Rclone Config
         env:
-          # Load the secret into an env var
-          GDRIVE_SA_KEY: ${{ secrets.GSA_CREDENTIALS }}
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
           GDRIVE_FOLDER: ${{ secrets.GEMINI_CONFIG_FOLDER_ID }}
         run: |
-          # Create the auth file from the secret
-          echo "$GDRIVE_SA_KEY" > sa_key.json
+          # Create the config directory
+          mkdir -p ~/.config/rclone
+          # Write the secret to the config file
+          echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
 
-          # Configure rclone to use the service account
-          # "gdrive" is the name we are giving this connection
-          # "drive" is the type of storage (Google Drive)
-          rclone config create gdrive drive service_account_file ./sa_key.json --non-interactive
-
-          # Run the copy command
-          # Usage: rclone copy <local_path> <remote_name>:<remote_folder>
-          # Replace './files-to-copy' with your actual folder (e.g., ./dist or ./src)
+      # --- DEPLOY ---
+      - name: Upload to Google Drive
+        run: |
+          # Copy the 'dist' folder to a '$GDRIVE_FOLDER' folder on your Drive
+          # 'gdrive' matches the [header] in your config file
           rclone copy ./brains gdrive:"$GDRIVE_FOLDER"
-
-          # Cleanup the key file for security
-          rm sa_key.json
