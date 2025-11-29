@@ -13,27 +13,57 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # --- SETUP ---
+      # 1. Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # 2. Setup Environment (Example for .NET - un-comment if needed)
+      # -name: Setup .NET
+      #  uses: actions/setup-dotnet@v4
+      # with:
+      #   dotnet-version: 10.0.x
+
+      # 3. Build Project (Example - un-comment if needed)
+      # - name: Build Project
+      #  run: |
+      #    echo "Run your build command here (e.g., npm run build or dotnet publish)"
+      #    # For now, we make the directory so the next step doesn't fail
+      #    mkdir -p dist
+
+      # 4. Install Rclone
       - name: Install Rclone
         run: sudo -v ; curl https://rclone.org/install.sh | sudo bash
 
-      # --- CONFIGURATION ---
+      # 5. Configure RClone (from Secrets)
       - name: Setup Rclone Config
         env:
           RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
-          GDRIVE_FOLDER: ${{ secrets.GEMINI_CONFIG_FOLDER_ID }}
+          GDRIVE_FOLDER: ${{ secrets.GEMINI_GEM_FOLDER }}
         run: |
           # Create the config directory
           mkdir -p ~/.config/rclone
           # Write the secret to the config file
           echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
 
-      # --- DEPLOY ---
-      - name: Upload to Google Drive
+      # 6a. Deploy to Drive 1/3
+      - name: Upload to Google Drive - system-kernel
         run: |
-          # Copy the 'dist' folder to a '$GDRIVE_FOLDER' folder on your Drive
-          # 'gdrive' matches the [header] in your config file
-          rclone copy ./brains gdrive:_GitHub_Deployment_Test
+          # Copy the 'system-kernel' to the specified Google Drive folder'
+          rclone copy ./system-kernel.md gdrive:$GDRIVE_FOLDER
+
+      # 6b. Deploy to Drive 2/3
+      - name: Upload to Google Drive - brains
+        run: |
+          # Copy the 'brains' directory to the specified Google Drive folder'
+          rclone copy ./brains gdrive:$GDRIVE_FOLDER
+
+      # 6c. Deploy to Drive 3/3
+      - name: Upload to Google Drive - context
+        run: |
+          # Copy the 'context' directory to the specified Google Drive folder'
+          rclone copy ./context gdrive:$GDRIVE_FOLDER
+
+      # 7. Security Cleanup
+      - name: Remove Rclone Config
+        if: always() # Runs even if previous steps fail
+        run: rm -rf ~/.config/rclone
