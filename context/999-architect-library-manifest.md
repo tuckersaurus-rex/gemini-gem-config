@@ -8,11 +8,11 @@ Before generating NEW files, you MUST search this table.
 - Mark it as `(Use Existing)` in the tree.
 - **DO NOT** generate the content for these files.
 
-## 2. The Module Catalog
+## 2. The Module Catalog (Initial State)
 
-| ID Range | Filename                            | Description                                                        |
-| :------- | :---------------------------------- | :----------------------------------------------------------------- |
-| **000**  | `000-core-boilerplate.md`           | The standard System Kernel. Required for every Gem.                |
-| **100**  | `100-role-gem-architect.md`         | Persona for designing modular Gem structures.                      |
-| **200**  | `200-tech-module-standards.md`      | Rules for writing Gem knowledge files (Markdown, headers, naming). |
-| **999**  | `999-architect-library-manifest.md` | The inventory of existing modules.                                 |
+| ID Range | Filename | Description/Skills |
+| :--- | :--- | :--- |
+| **000** | `000-core-boilerplate.md` | The standard System Kernel. Required for every Gem. |
+| **100** | `100-role-gem-architect.md` | Persona for designing modular Gem structures. |
+| **200** | `200-tech-module-standards.md` | Rules for writing Gem knowledge files (Markdown, headers, naming). |
+| **999** | `999-architect-library-manifest.md` | The inventory of existing modules. |

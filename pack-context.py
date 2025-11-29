@@ -1,63 +1,75 @@
 import os
 import re
 import datetime
+import sys
 
-# --- CONFIGURATION ---
-# Dynamically name the file: 998-context-[folder_name].md
-current_folder = os.path.basename(os.getcwd())
-safe_project_name = re.sub(r'[^a-z0-9]', '-', current_folder.lower())
-OUTPUT_FILENAME = f"998-context-{safe_project_name}.md"
+# --- CONFIGURATION (Common Ignores) ---
 
-# Extensions to include in the snapshot
-ALLOWED_EXTENSIONS = {'.cs', '.razor', '.css', '.js', '.json', '.sql', '.md', '.py', '.yml'}
-
-# Directories to STRICTLY IGNORE
-# We ignore 'gem-brains' so we don't accidentally feed instructions back into the context
+# Directories to STRICTLY IGNORE (These are universal for Git/Build Systems)
 IGNORE_DIRS = {
     'bin', 'obj', '.git', '.github', '.vs', '.vscode', 'node_modules',
-    'gem-brains', 'releases', 'context', '__pycache__'
+    'releases', 'context', 'brains', '__pycache__', 'TestResults',
 }
 
 # Files to ignore
 IGNORE_FILES = {
-    OUTPUT_FILENAME, 'pack_context.py', 'package-lock.json', '.DS_Store', 'README.md'
+    'package-lock.json', '.DS_Store', 'README.md', 'changelog.md',
+    'license.txt', '.gitignore', '.gitkeep', 'pack-context.py' # Added self-reference
 }
 
-def generate_markdown_snapshot():
-    project_root = os.getcwd()
-    output_path = os.path.join(project_root, OUTPUT_FILENAME)
+# Extensions to include (Add/Remove as needed)
+ALLOWED_EXTENSIONS = {'.cs', '.razor', '.css', '.js', '.json', '.sql', '.md', '.py', '.yml'}
+
+
+def generate_markdown_snapshot(project_root, output_filename):
+    """Generates a single Markdown file containing all relevant source code."""
+
+    output_path = os.path.join(os.getcwd(), output_filename)
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    print(f"📦 Packing context for project: {safe_project_name}")
+    # Ensure project_root is a directory
+    if not os.path.isdir(project_root):
+        print(f"Error: Project root '{project_root}' is not a directory. Aborting.")
+        sys.exit(1)
+
+    # Ensure output file is inside the project root directory
+    abs_output_path = os.path.abspath(output_path)
+    abs_project_root = os.path.abspath(project_root)
+    try:
+        if os.path.commonpath([abs_output_path, abs_project_root]) != abs_project_root:
+            print("Error: Output file must be inside the project root directory. Aborting.")
+            sys.exit(1)
+    except ValueError:
+        print("Error: Output file and project root are on different drives. Aborting.")
+        sys.exit(1)
+    print(f"📦 Packing context from: {project_root}")
+    print(f"➡️ Output file: {output_filename}")
 
     with open(output_path, 'w', encoding='utf-8') as outfile:
-        # Century Protocol Header (High Priority Override)
-        outfile.write(f"# {OUTPUT_FILENAME}\n")
+        # Century Protocol Header
+        outfile.write(f"# {output_filename}\n")
         outfile.write(f"**Generated:** {timestamp}\n\n")
-        outfile.write(f"## 1. Project Context: {safe_project_name}\n")
-        outfile.write("This file contains the active source code snapshot. "
-                      "It overrides general technical instructions with specific project logic.\n\n")
+        outfile.write("## 1. Static Library Context\n")
+        outfile.write("This file contains the stable source code for a shared library. Treat this as foundational logic.\n\n")
 
-        # Walk the directory
         for root, dirs, files in os.walk(project_root):
-            # Modify dirs in-place to skip ignored directories
-            dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+            dirs[:] = [d for d in dirs if d.lower() not in IGNORE_DIRS]
 
             for file in files:
-                if file in IGNORE_FILES: continue
+                if file.lower() in IGNORE_FILES: continue
 
                 _, ext = os.path.splitext(file)
                 if ext.lower() not in ALLOWED_EXTENSIONS: continue
 
-                # Relative path calculation
                 file_path = os.path.join(root, file)
                 rel_path = os.path.relpath(file_path, project_root)
 
-                print(f"  + {rel_path}")
+                print(f"  + Packing: {rel_path}")
 
                 try:
                     with open(file_path, 'r', encoding='utf-8') as infile:
                         content = infile.read()
+
                         outfile.write(f"### File: `{rel_path}`\n")
                         outfile.write(f"```{ext.replace('.', '')}\n")
                         outfile.write(content)
@@ -66,7 +78,16 @@ def generate_markdown_snapshot():
                 except Exception as e:
                     print(f"  ! Error reading {rel_path}: {e}")
 
-    print(f"\n✅ Generated: {OUTPUT_FILENAME}")
+    print(f"\n✅ Success! Context packed into: {output_filename}")
+
 
 if __name__ == "__main__":
-    generate_markdown_snapshot()
+    if len(sys.argv) < 3:
+        print("Usage: python pack-context.py <path_to_library_root> <output_filename.md>")
+        print("Example: python pack-context.py ../SharedComponents 800-lib-shared-components.md")
+        sys.exit(1)
+
+    project_root = sys.argv[1]
+    output_filename = sys.argv[2]
+
+    generate_markdown_snapshot(project_root, output_filename)

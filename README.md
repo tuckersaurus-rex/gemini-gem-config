@@ -1,87 +1,61 @@
-# Gemini Gem Configuration
-
-## Overview
-
-This repository manages the source code for Gemini Gem "Knowledge Files." It utilizes a modular architecture known as the **Century Protocol**, which enforces a strict 3-digit numeric hierarchy to manage instruction priority.
-
-## The Century Protocol Structure
-
-- **000-099 (Core):** Kernel instructions and safety protocols.
-- **100-199 (Role):** Persona definitions (e.g., Architect, Developer).
-- **200-299 (Standards):** Operational standards (e.g., Module writing rules).
-- **300-899 (Tech):** Hard skills and frameworks (C#, Blazor, Python).
-- **900-999 (Project):** Business logic and specific project constraints.
-
-## Usage
-
-All files are maintained in **Kebab-Case** and intended to be uploaded directly to the "Knowledge" section of a Gemini Gem.
-
-## 🏗️ How to Prompt the Architect
-
-When requesting a new Gem configuration from the **Gem Architect**, use the following template to ensure it correctly maps requirements to the 000-999 file structure:
-
-> **I require a new Gem configuration for the following scenario:**
->
-> **1. Role (The "Who"):** > [e.g., Senior C# Backend Developer, Technical Writer, SEO Specialist]
->
-> **2. Project Context (The "Goal"):** > [Describe the specific project, business goal, or application being built. e.g., "A Blazor Web App for inventory management."]
->
-> **3. Tech Stack & Skills (The "What"):** > [List all languages, frameworks, and tools. e.g., .NET 8, EF Core, Docker, Azure DevOps.]
->
-> **4. Constraints & Standards:** > [List any specific rules. e.g., "Must use Kebab-Case for files," "Use clean architecture," "No external libraries."]
-
-**Note:** The Architect will automatically check the `999-architect-library-manifest` and reuse existing modules where possible.
-
-## 🚀 Creating & Updating Gems
-
-### Step 1: Build the "Brain" (The OS)
-
-The "Brain" defines _how_ the Gem thinks (Roles, Standards). It rarely changes.
-
-1. Navigate to the `/gem-brains` folder.
-2. Select the modules you need (Always include `000` and `200`).
-3. **Zip the files.**
-   - **Naming Convention:** `gem-brain-[version]-[date].zip`
-   - _Example:_ `gem-brain-v1.2-2025-11-28.zip`
-4. Move this Zip file to the `/releases` folder for safekeeping.
-5. **Upload** this Zip to the Gem's "Knowledge" section.
-
-### Step 2: Build the "Context" (The Project Data)
-
-The "Context" defines _what_ the Gem knows (Source Code, Library Manifests). It changes constantly.
-
-1. **For the Architect Gem:**
-   - Edit `/context/999-architect-library-manifest.md`.
-   - Upload directly to the Gem (replace the old one).
-2. **For Project Gems:**
-   - Run `python pack-context.py` in your project root.
-   - This generates `998-context-[project-name].md`.
-   - Upload directly to the Gem (replace the old one).
-
-## 🏗️ Contribution Guidelines
-
-1. **Strict Naming:** All files in `/gem-brains` MUST follow `[000-899]-[category]-[name].md`.
-2. **Kebab-Case:** No spaces or underscores allowed in filenames.
-3. **CI/CD:** The GitHub Action `Century Protocol QA` will block any PR that violates these rules.
-
-## 🔄 Contribution Workflow
-
-This repository follows a strict **Feature Branch** workflow. Direct commits to `main` are discouraged.
-
-1. **Sync:** Ensure your local main is up to date (`git checkout main && git pull`).
-2. **Branch:** Create a feature branch (`git checkout -b feature/new-module-name`).
-3. **Work:** Add your new `.md` knowledge files.
-4. **Commit:** Stage and commit your changes.
-5. **Push:** Push the branch to GitHub (`git push -u origin feature/new-module-name`).
-6. **PR:** Open a Pull Request on GitHub to merge into `main`.
+# Gemini Gem Configuration Library
 
 ## 📂 Repository Structure
 
 This repository utilizes the **Two-Slot Architecture** to separate static instructions from dynamic project data.
 
-| Directory         | Purpose                                                            | Protocol                                                    |
-| :---------------- | :----------------------------------------------------------------- | :---------------------------------------------------------- |
-| **`/gem-brains`** | **Slot 1: The OS.** Contains logic, roles, and formatting rules.   | **Strict.** Enforced by CI/CD. Files must be `000-899`.     |
-| **`/context`**    | **Slot 2: The Data.** Contains manifests and snapshots.            | **Flexible.** Contains `999` manifests and `998` snapshots. |
-| **`/releases`**   | Archived Zip files of the "Brain" logic.                           | N/A                                                         |
-| **Root**          | Contains the `pack-context.py` script and `system-kernel.md` file. | N/A                                                         |
+| Directory | Purpose | Protocol |
+| :--- | :--- | :--- |
+| **`/brains`** | **Slot 1: The OS/Kernel.** Contains core logic, roles, standards, and permanent library code. | **Strict.** Files must be `000` to `899` (Century Protocol). |
+| **`/context`** | **Slot 2: The Data Index.** Contains the library inventory (`999` manifest). | **Strict.** Contains the data indexes and metadata. |
+| **`/releases`** | Archived Zip files of built Brains. | N/A |
+| **`.github/`** | CI/CD Workflows. | N/A |
+| **Root** | Contains the `pack-context.py` script and documentation. | N/A |
+
+---
+
+## 🚀 Workflow: Creating a New Project Gem (Optimized)
+
+This optimized workflow leverages the **GitHub App Integration** to provide live code context (Data) while retaining the Gem's static instruction structure (Rules).
+
+| Step | Location | Action | Purpose |
+| :--- | :--- | :--- | :--- |
+| **1. Design & Plan** | Gemini Chat | Ask the **Gem Architect** to design the required instruction files using the template below. | Generates the file list and any new module content needed. |
+| **2. Repo Development** | Local Repo | Create a feature branch and add any new `.md` files the Architect generated (e.g., `350-tech-blazor.md`). | Adds new capabilities to the shared instruction library (`/brains`). |
+| **3. Catalog Update** | Local Repo | Add the newly created files to the `context/999-architect-library-manifest.md`. | Informs the Architect that this new module is now reusable. |
+| **4. Deployment Trigger** | GitHub UI | Commit changes and merge to `main` using **Squash and Merge**. | Triggers CI/CD to push the updated Brains/Manifest to Google Drive. |
+| **5. Final Assembly** | Local Repo | **Zip the necessary Brain files** from the `/brains` folder (including `000`, `100`, `200`, and any `800` library files). | Creates the portable instruction package (`gem-brain-latest.zip`). |
+| **6. Gem Creation** | New Gem Config | **Create the new Project Gem** by uploading the **Brain Zip** (`gem-brain-latest.zip`). | Provides the static **Rules and Core Libraries** for the session. |
+| **7. Context Injection** | Gemini Chat | **Start a chat** with the new Gem, click **Add file** → **Import code** → **Enter the GitHub branch URL** of your project code. | Provides the dynamic **Data** (live codebase context) for the session. |
+
+---
+
+## 🛠️ Tooling & Architecture
+
+### 1. Architect Prompt Template
+
+When requesting a new Gem configuration from the Architect, use this structured input:
+
+> I require a new Gem configuration for the following scenario:
+>
+> 1.  **Role (The "Who"):** [e.g., Senior C# Backend Developer]
+> 2.  **Project Context (The "Goal"):** [Describe the specific business goal or application being built.]
+> 3.  **Tech Stack & Skills (The "What"):** [List all required languages, frameworks, and tools. e.g., .NET 8, EF Core, Docker.]
+> 4.  **Constraints & Standards:** [List any specific rules. e.g., "Must use Kebab-Case," "Use clean architecture."]
+
+### 2. pack-context.py (Static Library Injection)
+
+This script is used **only** for capturing the source code of **stable, internal libraries** (files in the 800-band).
+
+* **Purpose:** To transform stable library code into a single `800-lib-*.md` file that is then included in the Brain Zip as permanent knowledge.
+* **Usage:** `python pack-context.py <path_to_library_root> <output_filename.md>`
+* **Placement:** The resulting `800-lib-*.md` file must be placed in the `/brains` directory.
+
+---
+
+## 🏗️ Contribution Workflow
+
+1.  **Strict Naming:** All files in `/brains` MUST follow `[000-899]-[category]-[name].md` (Kebab-Case).
+2.  **Deployment Trigger:** The `deploy-to-drive.yml` workflow runs ONLY after a Pull Request is merged into `main`.
+3.  **CI Enforcement:** The `quality-check.yml` GitHub Action will block any PR that violates the naming, formatting, or structure rules defined in the system.
+4.  **Merging:** Always select **Squash and Merge** to maintain a clean, linear history on the `main` branch.
