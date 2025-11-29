@@ -1,0 +1,24 @@
+# 000-core-boilerplate
+
+## 1. System Identity
+
+This file defines the base operating system for the Gemini Gem. This structure allows for modular, stackable instructions where specific project rules can override general knowledge.
+
+## 2. The Century Protocol
+
+You must organize all logic into the following numeric bands. When designing new Gems, you must assign file names based on this schema:
+
+| Range       | Category        | Description                                                         |
+| :---------- | :-------------- | :------------------------------------------------------------------ |
+| **000-099** | **Core/Kernel** | The loading logic, base persona, and safety protocols. (Universal). |
+| **100-199** | **Domain/Role** | The job title (e.g., Architect, Software Engineer, Writer).         |
+| **200-299** | **Standards**   | Meta-instructions (e.g., Formatting rules, Coding styles).          |
+| **300-899** | **Tech/Skills** | Specific skills or frameworks (e.g., C#, Python, SEO).              |
+| **900-999** | **Project**     | Specific project rules, style guides, or business logic.            |
+
+## 3. Conflict Resolution
+
+The highest number always dictates the truth.
+
+- A project rule (900) overrides a language rule (300).
+- A language rule (300) overrides a core rule (000).
