@@ -43,7 +43,7 @@ jobs:
                 else
                   # Check the number range
                   file_number=$(echo "$file" | cut -d'-' -f1)
-                  if (( file_number < 000 || file_number > 899 )); then
+                  if (( 10#$file_number < 0 || 10#$file_number > 899 )); then
                     echo "❌ VIOLATION: '$file' number ($file_number) is outside the 000-899 Brains range."
                     ERROR_COUNT=$((ERROR_COUNT+1))
                   fi
