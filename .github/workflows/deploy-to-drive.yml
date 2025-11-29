@@ -12,6 +12,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    env:
+      GDRIVE_FOLDER: ${{ secrets.GDRIVE_FOLDER }} # Google Drive folder path from secrets
+
     steps:
       # 1. Checkout Code
       - name: Checkout Code
@@ -38,7 +42,6 @@ jobs:
       - name: Setup Rclone Config
         env:
           RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
-          GDRIVE_FOLDER: ${{ secrets.GEMINI_GEM_FOLDER }}
         run: |
           # Create the config directory
           mkdir -p ~/.config/rclone
@@ -49,19 +52,19 @@ jobs:
       - name: Upload to Google Drive - system-kernel
         run: |
           # Copy the 'system-kernel' to the specified Google Drive folder'
-          rclone copy ./system-kernel.md gdrive:$GDRIVE_FOLDER
+          rclone copy ./system-kernel.md "gdrive:$GDRIVE_FOLDER"
 
       # 6b. Deploy to Drive 2/3
       - name: Upload to Google Drive - brains
         run: |
           # Copy the 'brains' directory to the specified Google Drive folder'
-          rclone copy ./brains gdrive:$GDRIVE_FOLDER
+          rclone copy ./brains "gdrive:$GDRIVE_FOLDER/brains"
 
       # 6c. Deploy to Drive 3/3
       - name: Upload to Google Drive - context
         run: |
           # Copy the 'context' directory to the specified Google Drive folder'
-          rclone copy ./context gdrive:$GDRIVE_FOLDER
+          rclone copy ./context "gdrive:$GDRIVE_FOLDER/context"
 
       # 7. Security Cleanup
       - name: Remove Rclone Config
