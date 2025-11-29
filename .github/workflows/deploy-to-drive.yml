@@ -1,0 +1,98 @@
+name: Deploy Instructions to Google Drive
+
+on:
+  push:
+    branches:
+      - main # Trigger after merge to main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+
+      # 1. Install necessary utilities: jq (JSON processor) and zip
+      - name: Install Utilities
+        run: sudo apt-get update && sudo apt-get install -y jq zip
+
+      # 2. Install YQ (YAML processor) for reading the build recipe
+      - name: 📝 Install YQ
+        run: sudo wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && sudo chmod +x /usr/bin/yq
+
+      # 3. Read the YAML manifest and convert it into a JSON array for easy looping
+      - name: 📄 Convert Manifest to JSON
+        id: manifest
+        run: |
+          yq '.[] | {"version": .version, "base_name": .filename, "file_list": .modules, "drive_folder": .drive_folder}' gem-zip-manifest.yaml | jq -s . > /tmp/manifest.json
+
+      # 4. Loop through the generated JSON array, create custom zips, and assemble
+      - name: 🗜️ Package Custom Brain Zips & Context
+        id: package_artifacts
+        run: |
+          # The runner's current working directory is the repo root.
+          MANIFEST_JSON="/tmp/manifest.json"
+
+          # 1. Ensure the releases directory is clean and ready
+          rm -rf releases/*
+
+          jq -c '.[]' $MANIFEST_JSON | while read i; do
+
+            # PARSE DATA
+            VERSION=$(echo "$i" | jq -r '.version')
+            DRIVE_FOLDER_NAME=$(echo "$i" | jq -r '.drive_folder')
+            BASE_FILENAME_RAW=$(echo "$i" | jq -r '.filename')
+            MODULE_ARRAY=$(echo "$i" | jq -r '.file_list | @tsv')
+            CONTEXT_ARRAY=$(echo "$i" | jq -r '.external_context | @tsv')
+
+            # Substitute version placeholder
+            ZIP_FILENAME=$(echo "$BASE_FILENAME_RAW" | sed "s/{{ version }}/$VERSION/")
+
+            echo "--- Processing Gem: $DRIVE_FOLDER_NAME"
+
+            # --- A) Create Artifact Destination (Subfolder in releases) ---
+            # This folder will hold all final files for this Gem.
+            ARTIFACT_PATH="releases/$DRIVE_FOLDER_NAME"
+            mkdir -p "$ARTIFACT_PATH"
+            echo "Created destination folder: $ARTIFACT_PATH"
+
+            # --- B) Zip all items under -modules ---
+            FILES_TO_ZIP=""
+            for file in $MODULE_ARRAY; do
+              FILES_TO_ZIP+=" brains/$file"
+            done
+
+            # Execute the zip command and place the result in the artifact folder
+            zip -j "$ARTIFACT_PATH/$ZIP_FILENAME" $FILES_TO_ZIP
+            echo "✅ Created $ZIP_FILENAME"
+
+            # --- C) Copy all files listed under -external_context ---
+            if [[ -n "$CONTEXT_ARRAY" ]]; then
+              echo "Copying external context files..."
+              for file in $CONTEXT_ARRAY; do
+                # This copies the file from its source location (e.g., /context) to the final subfolder
+                cp "$file" "$ARTIFACT_PATH/"
+                echo "  - Copied $file"
+              done
+            fi
+
+          done
+
+      # 5. Final Upload ALL Artifacts (Combined Upload Step)
+      - name: ⬆️ Upload All Artifacts to Drive
+        uses: nextDriveIoE/google-drive-upload-action@v2
+        with:
+          credentials: ${{ secrets.GSA_CREDENTIALS }}
+          parent_folder_id: ${{ secrets.GEMINI_CONFIG_FOLDER_ID }}
+          # Target: Pushes the entire content of the 'releases' folder, maintaining the subfolder structure.
+          # The context/manifest files must be pushed separately, as they are not inside releases.
+          target: releases/
+          overwrite: true
+
+      - name: ⬆️ Upload Global Manifest
+        uses: nextDriveIoE/google-drive-upload-action@v2
+        with:
+          credentials: ${{ secrets.GSA_CREDENTIALS }}
+          parent_folder_id: ${{ secrets.GEMINI_CONFIG_FOLDER_ID }}
+          target: context/999-architect-library-manifest.md
+          overwrite: true

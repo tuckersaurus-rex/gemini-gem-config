@@ -14,18 +14,13 @@ All files must strictly follow: `[3-Digit-Number]-[category]-[name].md`
 
 **Structure:**
 
-1. **Prefix:** 3 digits followed immediately by a hyphen (e.g., `100-`).
-2. **Body:** Lowercase description separated by hyphens.
-
-**Examples:**
-
-- `000-core-boilerplate.md`
-- `105-role-senior-dev.md`
-- `350-tech-blazor.md`
+1.  **Prefix:** 3 digits followed immediately by a hyphen (e.g., `100-`).
+2.  **Body:** Lowercase description separated by hyphens.
 
 ## 3. Content Separation Guide
 
 - **Core (000):** How to parse files.
 - **Domain (100):** "Who you are."
 - **Tech (300):** "How you do it."
+- **Libraries (800):** Stable code context.
 - **Project (900):** "What you are building right now."

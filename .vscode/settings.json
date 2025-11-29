@@ -1,1 +1,4 @@
-{ "markdownlint.configFile": ".markdownlint.json" }
+{
+    // Fixes the markdownlint extension not finding the config file
+    "markdownlint.configFile": ".markdownlint.json"
+}

@@ -1,0 +1,29 @@
+# --- Gemini Gem Build Recipes ---
+# Defines the contents for each distinct 'Brain' zip file.
+
+# The Architect Gem (Requires only core instruction files)
+- name: ARCHITECT_BRAIN
+  filename: gem-brain-architect.zip
+  description: Core files for managing the instruction library.
+  version: 1.0.0
+  drive_folder: Gemini Architect Gem
+  modules:
+    - 000-core-boilerplate.md
+    - 100-role-gem-architect.md
+    - 200-tech-module-standards.md
+  external_context:
+    - context/999-architect-library-manifest.md
+# The C# Dev Gem (Requires core + C# tech files)
+# - name: CSHARP_DEV_BRAIN
+#   filename: gem-brain-csharp-dev.zip
+#   description: Core files plus C# language and shared library components.
+#   version: 1.0.0
+#   drive_folder: Gemini CSharp Dev Gem
+#   modules:
+#     - 000-core-boilerplate.md
+#     - 100-role-software-engineer.md
+#     - 305-tech-csharp.md
+#     - 800-lib-components.md # Example of a custom library
+#   external-context: [] # List of external files (e.g. config, context, etc)
+
+# Add more Gem definitions here...
