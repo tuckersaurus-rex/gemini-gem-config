@@ -70,7 +70,7 @@ jobs:
               echo "Copying external context files..."
               for file in $CONTEXT_ARRAY; do
                 # This copies the file from its source location (e.g., /context) to the final subfolder
-                cp "$file" "$ARTIFACT_PATH/"
+                cp "$file" "$ARTIFACT_PATH/" || { echo "Error: Failed to copy $file"; exit 1; }
                 echo "  - Copied $file"
               done
             fi
