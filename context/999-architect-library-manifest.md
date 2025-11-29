@@ -13,4 +13,4 @@ Before generating NEW files, you MUST search this table. If a required module is
 | **200** | 200-tech-module-standards.md | Defines the formatting rules for all knowledge modules. |
 | **999** | 999-architect-library-manifest.md | The inventory of existing modules. |
 
-Note: Add new reusable modules to this list!
+Note: When adding new reusable modules, follow the Century Protocol numbering scheme. Each entry must include the ID range, filename, and a brief description of the module's purpose or skills. Ensure the module fits the existing structure and conventions.

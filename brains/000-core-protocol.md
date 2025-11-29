@@ -1,4 +1,4 @@
-# 000-core-boilerplate
+# 000-core-protocol
 
 ## 1. System Identity
 
