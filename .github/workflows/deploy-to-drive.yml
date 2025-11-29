@@ -34,7 +34,7 @@ jobs:
           MANIFEST_JSON="/tmp/manifest.json"
 
           # 1. Ensure the releases directory is clean and ready
-          rm -rf releases/*
+          mkdir -p releases && rm -rf releases/*
 
           jq -c '.[]' $MANIFEST_JSON | while read i; do
 
