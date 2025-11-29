@@ -1,0 +1,57 @@
+name: Century Protocol QA
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main", "feature/*"]
+
+jobs:
+  # JOB 1: SYNTAX CHECK
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Markdown Lint
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: "**/*.md"
+
+  # JOB 2: ENFORCE NAMING (BRAINS ONLY)
+  protocol-enforcer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Verify Gem Brains Structure
+        run: |
+          echo "🔍 Scanning 'gem-brains/' for Century Protocol compliance..."
+
+          # Regex: Start(^) 3digits - lowercase letters - lowercase/numbers/hyphens .md End($)
+          REGEX="^[0-9]{3}-[a-z]+-[a-z0-9-]+\.md$"
+
+          ERROR_COUNT=0
+
+          if [ -d "gem-brains" ]; then
+            cd gem-brains
+            # Check if dir is empty to avoid loop errors
+            if [ -n "$(ls -A . 2>/dev/null)" ]; then
+              for file in *.md; do
+                if [[ ! "$file" =~ $REGEX ]]; then
+                  echo "❌ VIOLATION: '$file' invalid. Must be '000-category-name.md' (kebab-case)."
+                  ERROR_COUNT=$((ERROR_COUNT+1))
+                else
+                  echo "✅ OK: $file"
+                fi
+              done
+            else
+               echo "⚠️ 'gem-brains' is empty. No files to check."
+            fi
+          else
+            echo "⚠️ 'gem-brains' directory missing!"
+            exit 1
+          fi
+
+          if [ $ERROR_COUNT -gt 0 ]; then
+            echo "🚫 FAILED: Found $ERROR_COUNT violation(s). Fix filenames before merging."
+            exit 1
+          fi

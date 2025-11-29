@@ -32,6 +32,38 @@ When requesting a new Gem configuration from the **Gem Architect**, use the foll
 
 **Note:** The Architect will automatically check the `999-architect-library-manifest` and reuse existing modules where possible.
 
+## 🚀 Creating & Updating Gems
+
+### Step 1: Build the "Brain" (The OS)
+
+The "Brain" defines _how_ the Gem thinks (Roles, Standards). It rarely changes.
+
+1.  Navigate to the `/gem-brains` folder.
+2.  Select the modules you need (Always include `000` and `200`).
+3.  **Zip the files.**
+    - **Naming Convention:** `gem-brain-[version]-[date].zip`
+    - _Example:_ `gem-brain-v1.2-2025-11-28.zip`
+4.  Move this Zip file to the `/releases` folder for safekeeping.
+5.  **Upload** this Zip to the Gem's "Knowledge" section.
+
+### Step 2: Build the "Context" (The Project Data)
+
+The "Context" defines _what_ the Gem knows (Source Code, Library Manifests). It changes constantly.
+
+1.  **For the Architect Gem:**
+    - Edit `/context/999-architect-library-manifest.md`.
+    - Upload directly to the Gem (replace the old one).
+2.  **For Project Gems:**
+    - Run `python pack_context.py` in your project root.
+    - This generates `998-context-[project-name].md`.
+    - Upload directly to the Gem (replace the old one).
+
+## 🏗️ Contribution Guidelines
+
+1.  **Strict Naming:** All files in `/gem-brains` MUST follow `[000-899]-[category]-[name].md`.
+2.  **Kebab-Case:** No spaces or underscores allowed in filenames.
+3.  **CI/CD:** The GitHub Action `Century Protocol QA` will block any PR that violates these rules.
+
 ## 🔄 Contribution Workflow
 
 This repository follows a strict **Feature Branch** workflow. Direct commits to `main` are discouraged.
@@ -45,13 +77,11 @@ This repository follows a strict **Feature Branch** workflow. Direct commits to 
 
 ## 📂 Repository Structure
 
-/
-├── /Example Project # Put any project related knowledge files (non-century protocol names)
-├── .gitignore # Ignores Google Drive system files
-├── README.md # Documentation
-├── 000-core-boilerplate.md
-├── 100-role-gem-architect.md
-├── 200-tech-module-standards.md
-├── ... # Other knowledge files
-├── 999-architect-library-manifest.md
-└── sytem-kernal.me # What to put in the Gem instructions
+This repository utilizes the **Two-Slot Architecture** to separate static instructions from dynamic project data.
+
+| Directory         | Purpose                                                            | Protocol                                                    |
+| :---------------- | :----------------------------------------------------------------- | :---------------------------------------------------------- |
+| **`/gem-brains`** | **Slot 1: The OS.** Contains logic, roles, and formatting rules.   | **Strict.** Enforced by CI/CD. Files must be `000-899`.     |
+| **`/context`**    | **Slot 2: The Data.** Contains manifests and snapshots.            | **Flexible.** Contains `999` manifests and `998` snapshots. |
+| **`/releases`**   | Archived Zip files of the "Brain" logic.                           | N/A                                                         |
+| **Root**          | Contains the `pack_context.py` script and `system-kernel.md` file. | N/A                                                         |
