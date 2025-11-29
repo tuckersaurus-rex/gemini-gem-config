@@ -21,7 +21,6 @@ jobs:
         run: sudo wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && sudo chmod +x /usr/bin/yq
 
       # 3. Read the YAML manifest and convert it into a JSON array for easy looping
-      # FIX: Explicitly include the 'external_context' property in the extraction
       - name: 📄 Convert Manifest to JSON
         id: manifest
         run: |
