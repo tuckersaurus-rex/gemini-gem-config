@@ -136,11 +136,17 @@ def build_artifact(artifact, config):
 
 def main():
     manifest = load_manifest()
+
+    # Helper to safely get string values, defaulting if key is missing OR value is None
+    def get_config(key, default):
+        val = manifest.get(key)
+        return val if val is not None else default
+
     config = {
-        'kernel': manifest.get('sys_kernel', 'system-instructions.md'),
-        'knowledge': manifest.get('sys_knowledge', 'brains/').rstrip('/'),
-        'context': manifest.get('sys_context', 'context/').rstrip('/'),
-        'dist': manifest.get('sys_dist', 'releases/').rstrip('/')
+        'kernel': get_config('sys_kernel', 'system-instructions.md'),
+        'knowledge': get_config('sys_knowledge', 'brains/').rstrip('/'),
+        'context': get_config('sys_context', 'context/').rstrip('/'),
+        'dist': get_config('sys_dist', 'releases/').rstrip('/')
     }
 
     clean_dist(config['dist'])

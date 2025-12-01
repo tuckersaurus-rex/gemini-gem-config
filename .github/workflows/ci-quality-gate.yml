@@ -45,7 +45,7 @@ jobs:
           echo "Reading configuration from ${{ env.MANIFEST_FILE }}..."
 
           # 1. Parse Knowledge Directory
-          KNOW_DIR_RAW=$(yq -r '.sys_knowledge' ${{ env.MANIFEST_FILE }})
+          KNOW_DIR_RAW=$(yq -r '.sys_knowledge // "brains/"' ${{ env.MANIFEST_FILE }})
           KNOW_DIR="${KNOW_DIR_RAW%/}" # Strip trailing slash
 
           # 2. Define Decimal Patch v3.0 Regex

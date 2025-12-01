@@ -37,7 +37,7 @@ jobs:
       - name: Parse Configuration
         id: parse_config
         run: |
-          DIST=$(yq -r '.sys_dist' ${{ env.MANIFEST_FILE }})
+          DIST=$(yq -r '.sys_dist // "releases/"' ${{ env.MANIFEST_FILE }})
           # Remove trailing slash
           DIST="${DIST%/}"
           echo "dist_dir=$DIST" >> $GITHUB_OUTPUT
