@@ -25,3 +25,5 @@ This is the **Long-Term Memory** of the Architect. Before generating NEW files, 
 | **60** | `60-lib-mudblazor.md` | MudBlazor priority overrides. |
 | **60** | `60-lib-tailwind.md` | Utility-first CSS overrides. |
 | **80** | `80-custom-module-catalog.md` | Known modules |
+| **80** | `80-custom-template-project.md` | Template for creating project knowledge |
+| **90** | `90-project-gem-architect.md` | Module Catalog requirement |

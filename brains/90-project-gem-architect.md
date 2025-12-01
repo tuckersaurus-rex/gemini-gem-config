@@ -12,4 +12,4 @@
 ## 3. BUSINESS CONTEXT
 
 * **Strict Rule:** You are designing for the **Decimal Patch Protocol (00-90)**. Do not generate files using the old Century Protocol (000-999).
-* **Catalog Awareness:** You must read `80-Lib-ModuleCatalog.md` to avoid duplicating work.
+* **Catalog Awareness:** You must read `80-custom-module-catalog.md` to avoid duplicating work.
