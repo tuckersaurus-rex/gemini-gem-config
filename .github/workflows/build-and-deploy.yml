@@ -7,183 +7,61 @@ on:
       - "main"
       - "workflow/*"
 
-# ==================================================
-# GLOBAL CONFIGURATION
-# ==================================================
 env:
   MANIFEST_FILE: "manifest.yaml"
-  GDRIVE_ROOT: ${{ secrets.GEMINI_GEM_FOLDER }}
+  GDRIVE_ROOT: ${{ secrets.GDRIVE_DIR }}
 
 jobs:
   # ==================================================
-  # JOB 1: SETUP
-  # ==================================================
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      kernel_file: ${{ steps.parse.outputs.kernel_file }}
-      know_dir: ${{ steps.parse.outputs.know_dir }}
-      ctx_dir: ${{ steps.parse.outputs.ctx_dir }}
-      dist_dir: ${{ steps.parse.outputs.dist_dir }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Environment (yq)
-        run: |
-          sudo wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-          sudo chmod +x /usr/bin/yq
-
-      - name: Configuration (Manifest)
-        id: parse
-        run: |
-          # Extract values using yq
-          KERNEL=$(yq -r '.sys_kernel' ${{ env.MANIFEST_FILE }})
-          KNOW=$(yq -r '.sys_knowledge' ${{ env.MANIFEST_FILE }})
-          CTX=$(yq -r '.sys_context' ${{ env.MANIFEST_FILE }})
-          DIST=$(yq -r '.sys_dist' ${{ env.MANIFEST_FILE }})
-
-          # Sanitize
-          KNOW="${KNOW%/}"
-          CTX="${CTX%/}"
-          DIST="${DIST%/}"
-
-          # Set Outputs
-          echo "kernel_file=$KERNEL" >> $GITHUB_OUTPUT
-          echo "know_dir=$KNOW" >> $GITHUB_OUTPUT
-          echo "ctx_dir=$CTX" >> $GITHUB_OUTPUT
-          echo "dist_dir=$DIST" >> $GITHUB_OUTPUT
-
-  # ==================================================
-  # JOB 2: BUILD
+  # JOB 1: BUILD (EXECUTE PYTHON BUILDER)
   # ==================================================
   build:
-    needs: setup
     runs-on: ubuntu-latest
+    outputs:
+      dist_dir: ${{ steps.parse_config.outputs.dist_dir }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Environment (yq)
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install Dependencies
         run: |
+          pip install pyyaml
+          # We still use yq to read the output path for the CI workflow steps
           sudo wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/bin/yq
 
-      - name: Build (Gem Artifacts)
+      - name: Parse Configuration
+        id: parse_config
         run: |
-          MANIFEST="${{ env.MANIFEST_FILE }}"
-          KERNEL="${{ needs.setup.outputs.kernel_file }}"
-          DIR_BRAINS="${{ needs.setup.outputs.know_dir }}"
-          DIR_CTX="${{ needs.setup.outputs.ctx_dir }}"
-          DIR_DIST="${{ needs.setup.outputs.dist_dir }}"
+          DIST=$(yq -r '.sys_dist' ${{ env.MANIFEST_FILE }})
+          # Remove trailing slash
+          DIST="${DIST%/}"
+          echo "dist_dir=$DIST" >> $GITHUB_OUTPUT
+          echo "::notice::Build output directory set to: $DIST"
 
-          mkdir -p "$DIR_DIST"
-          JOB_HAS_ERRORS=0
+      # THE CORE BUILD STEP
+      # This script reads manifest.yaml, bundles the modules,
+      # zips them, and generates the README.md and Context files.
+      - name: Execute Build Engine
+        run: python builder.py
 
-          # ==================================================
-          # A. GLOBAL BOOTLOADER (Root Level)
-          # ==================================================
-          if [ -f "$KERNEL" ]; then
-            cp "$KERNEL" "$DIR_DIST/system-instructions.md"
-            echo "📄 Global Bootloader created at: $DIR_DIST/system-instructions.md"
-          else
-            echo "::warning::Kernel file '$KERNEL' not found."
-          fi
-
-          # ==================================================
-          # B. ARTIFACT LOOP
-          # ==================================================
-          count=$(yq -r '.artifacts | length' $MANIFEST)
-          echo "Found $count Artifacts."
-
-          for ((i=0; i<count; i++)); do
-            NAME=$(yq -r ".artifacts[$i].name" $MANIFEST)
-            ID=$(yq -r ".artifacts[$i].id" $MANIFEST)
-            VER=$(yq -r ".artifacts[$i].version" $MANIFEST)
-            DESC=$(yq -r ".artifacts[$i].description" $MANIFEST)
-
-            echo "--------------------------------------------------"
-            echo "🔨 Building: $NAME ($ID v$VER)"
-
-            VALID=1
-            FILES_TO_ZIP=""
-
-            # 1. Validate Modules
-            for file in $(yq -r ".artifacts[$i].modules[]" $MANIFEST); do
-              FULL_PATH="$DIR_BRAINS/$file"
-              if [ -f "$FULL_PATH" ]; then
-                FILES_TO_ZIP="$FILES_TO_ZIP $FULL_PATH"
-              else
-                echo "::error::[$NAME] Missing module: $FULL_PATH"
-                VALID=0
-                JOB_HAS_ERRORS=1
-              fi
-            done
-
-            if [ "$VALID" -eq 1 ]; then
-              TARGET_DIR="$DIR_DIST/$ID"
-              mkdir -p "$TARGET_DIR"
-
-              # 2. Generate Metadata (info.txt) - OUTSIDE ZIP
-              # This is for easy copy-pasting into AI Studio
-              INFO_FILE="$TARGET_DIR/info.txt"
-              echo "NAME: $NAME" > "$INFO_FILE"
-              echo "DESCRIPTION: $DESC" >> "$INFO_FILE"
-              echo "VERSION: $VER" >> "$INFO_FILE"
-
-              # 3. Generate History (README.md) - INSIDE ZIP
-              # This is for the AI to know its own version.
-              README_FILE="$TARGET_DIR/README.md"
-              echo "# $NAME" > "$README_FILE"
-              echo "" >> "$README_FILE"
-              echo "**Version:** $VER" >> "$README_FILE"
-              echo "**ID:** $ID" >> "$README_FILE"
-              echo "" >> "$README_FILE"
-              echo "## Description" >> "$README_FILE"
-              echo "$DESC" >> "$README_FILE"
-
-              # Add README to zip list
-              FILES_TO_ZIP="$FILES_TO_ZIP $README_FILE"
-
-              # 4. Copy Context Files (Optional)
-              for file in $(yq -r ".artifacts[$i].context[]" $MANIFEST 2>/dev/null); do
-                if [ ! -z "$file" ] && [ "$file" != "null" ]; then
-                  cp "$DIR_CTX/$file" "$TARGET_DIR/"
-                  # Note: To include context INSIDE the zip, uncomment the next line:
-                  # FILES_TO_ZIP="$FILES_TO_ZIP $DIR_CTX/$file"
-                fi
-              done
-
-              # 5. Zip It
-              ZIP_NAME="$ID-v$VER.zip"
-              # -j flattens paths so we don't get 'brains/x.md' in zip
-              zip -j "$TARGET_DIR/$ZIP_NAME" $FILES_TO_ZIP
-
-              # Cleanup temporary README
-              rm "$README_FILE"
-
-              echo "✅ Success: $ID"
-            else
-              echo "::warning::Skipping $ID due to errors."
-            fi
-          done
-
-          if [ "$JOB_HAS_ERRORS" -ne 0 ]; then
-            exit 1
-          fi
-
-      - name: Upload (Gem Artifacts)
+      - name: Upload Build Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gem-build-output
-          path: ${{ needs.setup.outputs.dist_dir }}
+          name: gem-release-candidate
+          path: ${{ steps.parse_config.outputs.dist_dir }}
 
   # ==================================================
-  # JOB 3: DEPLOY
+  # JOB 2: DEPLOY (SYNC TO DRIVE)
   # ==================================================
   deploy:
-    needs: [setup, build]
+    needs: build
     runs-on: ubuntu-latest
     if: success() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
 
@@ -198,19 +76,31 @@ jobs:
           mkdir -p ~/.config/rclone
           echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
 
-      - name: Download (Gem Artifacts)
+      - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: gem-build-output
-          path: ${{ needs.setup.outputs.dist_dir }}
+          name: gem-release-candidate
+          path: ./release_artifacts
 
-      - name: Deploy (Google Drive)
+      - name: Deploy to Drive (Mirror Sync)
         run: |
-          SOURCE="${{ needs.setup.outputs.dist_dir }}"
+          SOURCE="./release_artifacts"
           TARGET="gdrive:${{ env.GDRIVE_ROOT }}"
 
-          echo "🚀 Deploying from $SOURCE to Google Drive..."
-          rclone copy "$SOURCE" "$TARGET" --transfers=8 --verbose
+          echo "🚀 Syncing Production State to Google Drive..."
+          echo "   Source: $SOURCE"
+          echo "   Target: $TARGET"
+
+          # SYNC COMMAND EXPLAINED:
+          # --delete-during: Deletes files in Drive that are NOT in the build (cleans old versions).
+          # --create-empty-src-dirs: Ensures folder structure is preserved.
+          # No filters are used; we want an exact mirror.
+
+          rclone sync "$SOURCE" "$TARGET" \
+            --transfers=8 \
+            --verbose \
+            --delete-during \
+            --create-empty-src-dirs
 
       - name: Cleanup
         if: always()

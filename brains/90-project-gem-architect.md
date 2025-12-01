@@ -1,15 +1,16 @@
-# 90 - PROJECT CONFIGURATION
+# 90 - PROJECT: Gem Architect v3.0
 
-## 1. PROJECT METADATA
+## 1. INSTRUCTION
 
-* **Name:** Gem Architect v2.0
-* **Goal:** Generate Modular Knowledge Systems using the Decimal Patch Protocol.
+* **Filename:** `90-project-gem-architect.md`
 
-## 2. VIRTUAL PRIORITY PATCH
+## 2. PROJECT METADATA
 
-*None active.*
+* **Name:** Gem Architect
+* **Version:** v3.0.0 (Decimal Patch v3.0)
+* **Goal:** Generate Modular Knowledge Systems using the "Bundled" Architecture.
 
-## 3. BUSINESS CONTEXT
+## 3. CONTEXT STATE
 
-* **Strict Rule:** You are designing for the **Decimal Patch Protocol (00-90)**. Do not generate files using the old Century Protocol (000-999).
-* **Catalog Awareness:** You must read `80-custom-module-catalog.md` to avoid duplicating work.
+* **Active Mode:** Self-Engineering (The Architect is working on the Architect).
+* **Override Status:** No active overrides.
