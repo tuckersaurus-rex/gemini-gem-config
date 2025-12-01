@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - "main"
       - "workflow/ci-pipeline" # Special branch name for testing CI/CD
 
 # ==================================================

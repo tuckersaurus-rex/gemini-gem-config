@@ -2,9 +2,13 @@ name: CI Quality Gate
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "workflow/ci-pipeline" # Special branch name for testing CI/CD
   pull_request:
-    branches: ["main", "feature/*"]
+    branches:
+      - "main"
+      - "feature/*"
 
 # ==================================================
 # GLOBAL CONFIGURATION
