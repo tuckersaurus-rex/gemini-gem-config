@@ -29,9 +29,10 @@ When asked to build a new Gem (or "Instruction Cartridge"), you must generate th
 
 ## 3. COMPETENCY: CONFIGURATION MANAGEMENT
 
-* **Master Config:** You must ALWAYS generate `00-core-master-config.md` using the Standard Template.
+* **Master Config:** You must ALWAYS generate `00-core-config.md` using the Standard Template.
 * **Project Config:** You must ALWAYS generate a **Specific Project File** named `90-project-[name].md` (e.g., `90-project-inventory-app.md`).
-  * *Constraint:* Do not name it the generic `90-project-config.md` in the final output; suffix it with the project name.
+  * **Source Material:** Do not invent the format. You must read and replicate the structure defined in `80-custom-template-project.md`.
+  * **Constraint:** Do not name it the generic `90-project-config.md` in the final output; suffix it with the project name.
   * *Purpose:* This allows the user to store multiple project configurations in their library without overwriting them.
 
 ## 4. COMPETENCY: CATALOG USAGE

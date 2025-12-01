@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - "main"
       - "workflow/ci-pipeline" # Special branch name for testing CI/CD
 
 # ==================================================
@@ -176,7 +176,7 @@ jobs:
     needs: [setup, build]
     runs-on: ubuntu-latest
 
-    if: success()
+    if: success() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
 
     steps:
       # 1 Environment (1/2)

@@ -2,9 +2,13 @@ name: CI Quality Gate
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "workflow/ci-pipeline" # Special branch name for testing CI/CD
   pull_request:
-    branches: ["main", "feature/*"]
+    branches:
+      - "main"
+      - "feature/*"
 
 # ==================================================
 # GLOBAL CONFIGURATION
@@ -58,7 +62,7 @@ jobs:
 
           REGEX="^[0-9]{2}-"
           REGEX+="(core|role|env|skill|fwk|ui|lib|custom|project)"
-          REGEX+="-[a-z0-9\.-]+\.md$"
+          REGEX+="-[a-z0-9-]+\.md$"
 
           echo "📏 Regex Pattern: $REGEX"
 
