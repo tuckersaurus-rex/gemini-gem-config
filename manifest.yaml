@@ -4,39 +4,79 @@ sys_context: "context/"
 sys_dist: "releases/"
 
 # Template
+#  # ========================================
+#  # [GEM ARTIFACT NAME]
+#  # ========================================
 #  - name: "[Gem Artifact Name]"
 #    id: "[Name Used for Subfolder/Zip]"
 #    description: "[Gem Artifact Description]"
 #    version: "[0.0.0 - Patterned Version Number (used in zip name)]"
+#    # The Knowledge Modules (Sector 00-90)
 #    modules:
-#      # Core System Instructions
+#      # --- SYSTEM ---
 #      - "00-kernel-os.md"
-#      # - [OTHER MODULE]
-#      # Project Overrides / Rules
+#      # --- PERSONA ---
+#      # --- COMPETENCY ---
+#      # --- PROJECT ---
 #      - "90-project-[project-name]"
+#    # Static Context Files (PDFs, Images, etc.)
 #    context: []
 
 # ARTIFACT DEFINITIONS
 artifacts:
+  # ========================================
+  # GEM ARCHITECT
+  # ========================================
   - name: "Gem Architect"
     id: "gem-architect"
-    version: "3.0.0"
+    version: "3.1.0"
     description: "A modular knowledge cartridge compiled via the Decimal Patch Protocol. It packages specific Skills, Roles, and Business Rules into a versioned unit, allowing Gemini to instantly adopt specialized architectural capabilities."
-
     # The Knowledge Modules (Sector 00-90)
     modules:
+        # --- SYSTEM ---
       - "00-kernel-os.md"
       - "10-core-iterative.md"
       - "10-core-security.md"
+      # --- PERSONA ---
       - "20-role-system-architect.md"
       - "30-env-gem-builder.md"
+      # --- COMPETENCY ---
       - "40-skill-gem-engineering.md"
+      - "40-skill-instruction-writing.md"
+      - "40-skill-markdown-generation.md"
       - "80-custom-module-catalog.md"
       - "80-custom-template-core.md"
       - "80-custom-template-module.md"
       - "80-custom-template-project.md"
       - "80-custom-template-role.md"
+      # --- PROJECT ---
       - "90-project-gem-architect.md"
-
     # Static Context Files (PDFs, Images, etc.)
     context: []
+
+    # ========================================
+    # Blazor Library Engineer
+    # ========================================
+    - name: "Blazor Library Engineer"
+      id: "gem-blazor-lib-engineer"
+      version: "1.0.0"
+      description: "Your implementation partner. Uses the Senior Engineer persona (Code-First) equipped with the Blazor Library knowledge stack."
+      # The Knowledge Modules (Sector 00-90)
+      modules:
+        # --- SYSTEM ---
+        - "00-kernel-os.md"
+        - "10-core-iterative.md"
+        - "10-core-security.md"
+        # --- PERSONA ---
+        - "20-role-senor-engineer.md"
+        - "30-env-dotnet-library.md"
+        # --- COMPETENCY ---
+        - "40-skill-csharp-14.md"
+        - "40-skill-docs-xml-architecture.md"
+        - "40-skill-markdown-generation.md"
+        - "50-fwk-horizontal-structure.md"
+        - "60-ui-native.md"
+        # --- PROJECT ---
+        - "90-project-blazor-lib.md"
+      # Static Context Files (PDFs, Images, etc.)
+      context: []
