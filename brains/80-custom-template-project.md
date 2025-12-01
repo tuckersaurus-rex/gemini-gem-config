@@ -2,14 +2,16 @@
 
 ## 1. TEMPLATE USAGE
 
-This file serves as the **Source of Truth** for generating new Project Configuration files. When creating a `90-project-*.md` file for a user, strict adherence to this structure is required.
+This file serves as the **Source of Truth** for generating new Project Configuration files.
+* **Naming:** `90-project-[project-name].md`.
+* **Note:** The Build Engine will bundle all Sector 90-99 files into the `90-project.md` container.
 
 ## 2. THE TEMPLATE CONTENT
 
 *(Copy the block below exactly when generating output)*
 
 ```markdown
-# 90 - PROJECT CONFIGURATION
+# 90 - PROJECT: [PROJECT NAME]
 
 ## 1. INSTRUCTION
 
@@ -18,7 +20,7 @@ This file serves as the **Source of Truth** for generating new Project Configura
 ## 2. PROJECT METADATA
 
 * **Name:** [Insert Project Name]
-* **Type:** [e.g., Blazor Server, Python Script]
+* **Stack:** [e.g., Blazor Server, Python Script]
 * **Goal:** [Brief description of objective]
 
 ## 3. VIRTUAL PRIORITY PATCH
@@ -35,3 +37,4 @@ This file serves as the **Source of Truth** for generating new Project Configura
 *(Add specific rules that override general best practices)*
 * **Rule 1:** [e.g., "All dates must be UTC."]
 * **Environment:** [e.g., "Using Azure AD."]
+```
